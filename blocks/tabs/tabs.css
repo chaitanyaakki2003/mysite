@@ -1,0 +1,32 @@
+.tab-buttons {
+  display: flex;
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.tab-button {
+  padding: 10px 22px;
+  border-radius: 25px;
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+  cursor: pointer;
+  font-weight: 600;
+  color: #222;
+}
+
+.tab-button.active {
+  background: #1a73e8;
+  color: #fff;
+  border-color: #1a73e8;
+}
+
+/* IMPORTANT: hide all panels by default */
+.tab-content {
+  display: none;
+  padding: 14px 0;
+}
+
+/* show only active panel */
+.tab-content.active {
+  display: block;
+}
