@@ -8,12 +8,20 @@ export default function decorate(block) {
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
 
-    await fetch('https://script.google.com/macros/s/AKfycbxZxf6vRc2hZajzOsWirb_g9rwALHrft5seWZ4B913yGbIF1mgFlRGAkZDK46LJ4MUSeg/exec', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    try {
+      const resp = await fetch('https://script.google.com/macros/s/AKfycbzZAbSdl1Y1pcHRq-HNNGcAJVNJl-kfUpHaw_-NWgAoJz3UyhgJhO_xAlnOANWxQBJ2hA/exec', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(data),
+      });
 
-    alert('Form submitted successfully!');
-    form.reset();
+      if (!resp.ok) throw new Error('Request failed');
+
+      alert('Form submitted successfully!');
+      form.reset();
+    } catch (err) {
+      console.error(err);
+      alert('Submission failed!');
+    }
   });
 }
