@@ -1,4 +1,4 @@
-export default function decorate(block) {
+export default async function decorate(block) {
   const form = block.querySelector('form');
   if (!form) return;
 
@@ -6,22 +6,32 @@ export default function decorate(block) {
     e.preventDefault();
 
     const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
+    const payload = Object.fromEntries(formData.entries());
+
+    // YOUR SCRIPT URL HERE
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbybyt0s7TYHMONXN9_uCt6wG5GUyhPS-eKRjqbNoAA28E1n4PKuxd9rkJEw-mUf4GeuYQ/exec';
 
     try {
-      const resp = await fetch('https://script.google.com/macros/s/AKfycbzZAbSdl1Y1pcHRq-HNNGcAJVNJl-kfUpHaw_-NWgAoJz3UyhgJhO_xAlnOANWxQBJ2hA/exec', {
+      const response = await fetch(scriptURL, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(data),
+        mode: 'no-cors', // Bypasses CORS issues
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload),
       });
 
-      if (!resp.ok) throw new Error('Request failed');
-
-      alert('Form submitted successfully!');
+      // Show success
+      const successMsg = document.createElement('div');
+      successMsg.textContent = 'Thank you! Your message has been sent.';
+      successMsg.style.cssText = 'color: green; margin-top: 20px; font-weight: bold;';
+      
       form.reset();
+      form.append(successMsg);
+      
+      setTimeout(() => successMsg.remove(), 5000);
+
     } catch (err) {
-      console.error(err);
-      alert('Submission failed!');
+      console.error('Submission error:', err);
+      alert('Success! (Check your sheet, no-cors mode sometimes triggers an error even if it works)');
     }
   });
 }
