@@ -1,37 +1,94 @@
 export default async function decorate(block) {
-  const form = block.querySelector('form');
-  if (!form) return;
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(form);
-    const payload = Object.fromEntries(formData.entries());
-
-    // YOUR SCRIPT URL HERE
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbybyt0s7TYHMONXN9_uCt6wG5GUyhPS-eKRjqbNoAA28E1n4PKuxd9rkJEw-mUf4GeuYQ/exec';
-
-    try {
-      const response = await fetch(scriptURL, {
-        method: 'POST',
-        mode: 'no-cors', // Bypasses CORS issues
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(payload),
-      });
-
-      // Show success
-      const successMsg = document.createElement('div');
-      successMsg.textContent = 'Thank you! Your message has been sent.';
-      successMsg.style.cssText = 'color: green; margin-top: 20px; font-weight: bold;';
-      
-      form.reset();
-      form.append(successMsg);
-      
-      setTimeout(() => successMsg.remove(), 5000);
-
-    } catch (err) {
-      console.error('Submission error:', err);
-      alert('Success! (Check your sheet, no-cors mode sometimes triggers an error even if it works)');
-    }
-  });
+  const link = block.querySelector('a');
+  if (!link) return;
+ 
+  try {
+    const response = await fetch(link.href);
+    const data = await response.json();
+    const fields = data.data || data;
+ 
+    const form = document.createElement('form');
+    form.classList.add('dynamic-form');
+ 
+    fields.forEach((field) => {
+      if (!field.Type) return;
+ 
+      // Submit button
+      if (field.Type.toLowerCase() === 'submit') {
+        const button = document.createElement('button');
+        button.type = 'submit';
+        button.textContent = field.Label;
+        form.appendChild(button);
+        return;
+      }
+ 
+      const wrapper = document.createElement('div');
+      wrapper.classList.add('form-group');
+ 
+      const label = document.createElement('label');
+      label.textContent = field.Label;
+ 
+      let input;
+ 
+      if (field.Type.toLowerCase() === 'message') {
+        input = document.createElement('textarea');
+      } else {
+        input = document.createElement('input');
+        input.type =
+          field.Type.toLowerCase() === 'mobile'
+            ? 'tel'
+            : field.Type.toLowerCase();
+      }
+ 
+      input.name = field.Name.toLowerCase(); // important for sheet match
+      input.placeholder = field.placeholder || '';
+      input.required = true;
+ 
+      wrapper.appendChild(label);
+      wrapper.appendChild(input);
+      form.appendChild(wrapper);
+    });
+ 
+    // ✅ FORM SUBMIT HANDLER
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+ 
+      const formData = new FormData(form);
+      const jsonData = Object.fromEntries(formData.entries());
+ 
+      try {
+        const response = await fetch(
+          'https://script.google.com/macros/s/AKfycbxoTj5zvAm0LElxudGjQKepKLNVUzZcn-HRCejxiOyw3oY5kwr_vZr9772gKSb_NpiIGQ/exec',
+          {
+            method: 'POST',
+            body: JSON.stringify(jsonData),
+          }
+        );
+ 
+        const result = await response.json();
+ 
+        if (result.status === 'success') {
+          const message = document.createElement('p');
+          message.textContent = 'Form Submitted Successfully';
+          message.style.color = 'green';
+          message.style.marginTop = '10px';
+ 
+          form.appendChild(message);
+          form.reset();
+        } else {
+          alert('Submission Failed');
+        }
+ 
+      } catch (error) {
+        console.error(error);
+        alert('Submission Failed');
+      }
+    });
+ 
+    block.innerHTML = '';
+    block.appendChild(form);
+ 
+  } catch (error) {
+    console.error('Error loading form:', error);
+  }
 }
